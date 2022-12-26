@@ -3,10 +3,18 @@
 #include <stdio.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cstring>
 #include <stdexcept>
+#include <thread>
+
+
+#include <span>
+#include <iostream>
 
 namespace bln_audio {
+
+using namespace std::chrono_literals;
 
 namespace {
 
@@ -15,9 +23,8 @@ using Flags = PaStreamCallbackFlags;
 
 static auto pa_cb(const void*, void* out, const u64 frames, const Time*, const Flags, void* s) -> int
 {
-    return static_cast<sink_t*>(s)->process(static_cast<cfg::sample_t*>(out), frames)
-        ? paContinue
-        : paComplete;
+    static_cast<sink_t*>(s)->process(static_cast<cfg::sample_t*>(out), frames);
+    return paContinue;
 }
 
 auto pa_quiet_init() -> PaError
@@ -46,6 +53,12 @@ sink_t::~sink_t()
 {
     Pa_StopStream(m_stream);
     Pa_Terminate();
+}
+
+auto sink_t::operator<<(segment_t s) -> sink_t&
+{
+    m_pcm_queue.put(std::move(s));
+    return *this;
 }
 
 auto sink_t::process(cfg::sample_t* out, const u64) -> bool
