@@ -10,6 +10,13 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build Type" FORCE)
 endif()
 
+# Add external dependencies
+add_subdirectory(third_party/bln_queue)
+add_subdirectory(third_party/portaudio)
+
+add_compile_options(-Wall -Wextra -pedantic -Werror)
+
+# Add lib bln_audio
 add_library(${PROJECT_NAME} "")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -17,7 +24,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 )
 
 target_sources(${PROJECT_NAME} PRIVATE
+    include/bln_audio/config.hpp
     include/bln_audio/sink.hpp
+    include/bln_audio/types.hpp
 
     src/sink.cpp
 )
@@ -26,6 +35,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
+    bln_queue
+    portaudio
     Threads::Threads
 )
 
